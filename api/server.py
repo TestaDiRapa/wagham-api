@@ -57,14 +57,14 @@ def get_wagham_role(discord_token: str, discord_id: str) -> str:
     guilds_response = requests.get('https://discord.com/api/users/@me/guilds', headers=headers)
     if guilds_response.status_code != 200:
         return "NOT_IN_SERVER"
-    is_wagham = len(filter(lambda x: x["id"] == CONFIG["DISCORD"]["wagham_id"], guilds_response.json())) > 0
+    is_wagham = len(list(filter(lambda x: x["id"] == CONFIG["DISCORD"]["wagham_id"], guilds_response.json()))) > 0
     if not is_wagham:
         return "NOT_IN_SERVER"
     member_info_response = requests.get(f'https://discord.com/api/users/@me/guilds/{CONFIG["DISCORD"]["wagham_id"]}/member', headers=headers)
     if member_info_response.status_code != 200:
         return "NOT_IN_SERVER"
-    for k, v in ROLE_MAP:
-        if k in member_info_response.json["roles"]:
+    for k, v in ROLE_MAP.items():
+        if k in member_info_response.json()["roles"]:
             return v
 
 @app.route('/user', methods=['GET'])
@@ -77,7 +77,7 @@ def user():
             'client_id': client_id,
             'client_secret': client_secret,
             'grant_type': 'authorization_code',
-            'redirect_uri': 'http://localhost:8100/tabs/character',
+            'redirect_uri': 'http://localhost:8100/tabs/home',
             'scope': 'identify',
             'code': code
         }
