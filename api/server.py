@@ -1,24 +1,12 @@
-import configparser
-import datetime
 import os
 import requests
+from constants import CONFIG, EXPIRATION, TIER_REWARDS, ROLE_MAP
 from flask import Flask, jsonify, make_response, send_file, request
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+from waghamdb import WaghamDB
 
-CONFIG = configparser.ConfigParser()
-CONFIG.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), "static/secret/config.ini"))
-EXPIRATION = datetime.timedelta(hours=1)
-
-ROLE_MAP = {
-    "699175663009267732": "I Cavalieri di Malto",
-    "704974771376488459": "Master 3",
-    "704974466525954178": "Master 2",
-    "699240480373997589": "Master 1",
-    "757896706472935465": "Delegato di Gilda",
-    "699241511098908814": "Gildano",
-    "880481772066971658": "Aspirante Gildano"
-}
+db = WaghamDB(CONFIG, TIER_REWARDS)
 
 app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -96,7 +84,6 @@ def refresh():
     else:
         return make_response("", 405)
 
-
 @app.route('/auth', methods=['GET'])
 def auth():
     if request.method == 'GET':
@@ -136,6 +123,19 @@ def auth():
 @app.route('/content/images/<image_filename>', methods=['GET'])
 def content_image(image_filename: str):
     return send_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "static/content/img", image_filename))
+
+@app.route('/character', methods=['GET'])
+@jwt_required()
+def character_handler():
+    if request.method == 'GET':
+        identity = get_jwt_identity()
+        character = db.get_active_character(identity)
+        if character is None:
+            return make_response("", 404)
+        else:
+            return jsonify(character)
+    else:
+        return make_response("", 405)
 
 if __name__ == "__main__":
     app.run()
