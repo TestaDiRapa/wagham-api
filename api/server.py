@@ -120,10 +120,6 @@ def auth():
     else:
         return make_response("", 405)
 
-@app.route('/content/images/<image_filename>', methods=['GET'])
-def content_image(image_filename: str):
-    return send_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "static/content/img", image_filename))
-
 @app.route('/character', methods=['GET'])
 @jwt_required()
 def character_handler():
@@ -136,6 +132,24 @@ def character_handler():
             return jsonify(character)
     else:
         return make_response("", 405)
+
+@app.route('/content/images/<image_filename>', methods=['GET'])
+def content_image(image_filename: str):
+    return send_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "static/content/img", image_filename))
+
+@app.route('/mstable', methods=['GET'])
+def mstable_handler():
+    if request.method == 'GET':
+        return jsonify(mstable=db.mstable.ms_level, leveltable=db.mstable.level_table)
+    else:
+        make_response("", 405)
+
+@app.route('/items', methods=['GET'])
+def items_handler():
+    if request.method == 'GET':
+        return jsonify(db.get_items())
+    else:
+        make_response("", 405)
 
 if __name__ == "__main__":
     app.run()
